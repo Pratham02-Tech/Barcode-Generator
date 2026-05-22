@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ISBN Barcode Generator — Dr. T. M. Gogate Pratishthan</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- JsBarcode CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo-block">
+        <div class="logo-icon">
+          <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="2"  y="6" width="4"  height="28" rx="1" fill="currentColor"/>
+            <rect x="8"  y="6" width="2"  height="28" rx="1" fill="currentColor"/>
+            <rect x="12" y="6" width="5"  height="28" rx="1" fill="currentColor"/>
+            <rect x="19" y="6" width="2"  height="28" rx="1" fill="currentColor"/>
+            <rect x="23" y="6" width="4"  height="28" rx="1" fill="currentColor"/>
+            <rect x="29" y="6" width="2"  height="28" rx="1" fill="currentColor"/>
+            <rect x="33" y="6" width="5"  height="28" rx="1" fill="currentColor"/>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <span class="logo-title">ISBN Barcode Generator</span>
+          <span class="logo-sub">Created by Prathamesh Prashant Pawar</span>
+        </div>
+      </div>
+      <div class="header-badge">Professional Publishing Tool</div>
+    </div>
+  </header>
+
+  <!-- ===== MAIN ===== -->
+  <main class="main">
+
+    <!-- Generator Card -->
+    <section class="card generator-card">
+      <div class="card-header">
+        <h2 class="card-title">Generate Barcode</h2>
+        <p class="card-desc">Enter ISBN or any number to create a scannable barcode instantly</p>
+      </div>
+
+      <div class="form-grid">
+        <!-- Input -->
+        <div class="field-group full-width">
+          <label for="barcodeInput" class="field-label">Barcode Number / ISBN</label>
+          <div class="input-wrapper">
+            <input
+              type="text"
+              id="barcodeInput"
+              class="field-input"
+              placeholder="e.g. 9783161484100"
+              value="9783161484100"
+              autocomplete="off"
+              autofocus
+            />
+            <button class="copy-btn" id="copyBtn" title="Copy Number">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2"/>
+                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Barcode Type -->
+        <div class="field-group">
+          <label for="barcodeType" class="field-label">Barcode Type</label>
+          <select id="barcodeType" class="field-select">
+            <option value="CODE128">CODE128</option>
+            <option value="EAN13" selected>EAN-13 (ISBN)</option>
+            <option value="ISBN">ISBN</option>
+          </select>
+        </div>
+
+        <!-- Width -->
+        <div class="field-group">
+          <label for="barcodeWidth" class="field-label">Bar Width</label>
+          <select id="barcodeWidth" class="field-select">
+            <option value="1">Narrow (1)</option>
+            <option value="2" selected>Standard (2)</option>
+            <option value="3">Wide (3)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Generate Button -->
+      <button class="btn btn-primary" id="generateBtn">
+        <span class="btn-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="13 2 13 9 20 9"/><path d="M3 15v4a2 2 0 002 2h14a2 2 0 002-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+          </svg>
+        </span>
+        <span class="btn-text">Generate Barcode</span>
+        <span class="btn-loader" id="btnLoader"></span>
+      </button>
+
+      <!-- Error / Success Message -->
+      <div class="message" id="message"></div>
+    </section>
+
+    <!-- Preview Card -->
+    <section class="card preview-card" id="previewCard">
+      <div class="card-header">
+        <h2 class="card-title">Barcode Preview</h2>
+        <span class="timestamp" id="timestamp"></span>
+      </div>
+
+      <div class="barcode-display" id="barcodeDisplay">
+        <div class="barcode-placeholder" id="barcodePlaceholder">
+          <svg viewBox="0 0 80 60" fill="none" xmlns="http://www.w3.org/2000/svg" class="placeholder-icon">
+            <rect x="5"  y="10" width="5"  height="40" rx="1" fill="currentColor" opacity=".2"/>
+            <rect x="13" y="10" width="3"  height="40" rx="1" fill="currentColor" opacity=".15"/>
+            <rect x="19" y="10" width="7"  height="40" rx="1" fill="currentColor" opacity=".2"/>
+            <rect x="29" y="10" width="3"  height="40" rx="1" fill="currentColor" opacity=".15"/>
+            <rect x="35" y="10" width="5"  height="40" rx="1" fill="currentColor" opacity=".2"/>
+            <rect x="43" y="10" width="3"  height="40" rx="1" fill="currentColor" opacity=".15"/>
+            <rect x="49" y="10" width="7"  height="40" rx="1" fill="currentColor" opacity=".2"/>
+            <rect x="59" y="10" width="3"  height="40" rx="1" fill="currentColor" opacity=".15"/>
+            <rect x="65" y="10" width="5"  height="40" rx="1" fill="currentColor" opacity=".2"/>
+            <text x="40" y="58" text-anchor="middle" font-size="6" fill="currentColor" opacity=".3" font-family="monospace">Generate to preview</text>
+          </svg>
+          <p>Barcode will appear here</p>
+        </div>
+        <canvas id="barcodeCanvas" style="display:none;"></canvas>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-row" id="actionRow" style="display:none;">
+        <button class="btn btn-outline" id="downloadBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Download PNG
+        </button>
+        <button class="btn btn-outline" id="printBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 6 2 18 2 18 9"/>
+            <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+            <rect x="6" y="14" width="12" height="8"/>
+          </svg>
+          Print Barcode
+        </button>
+        <button class="btn btn-ghost" id="clearBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+          Clear
+        </button>
+      </div>
+    </section>
+
+    <!-- History Card -->
+    <section class="card history-card" id="historyCard">
+      <div class="card-header history-head">
+        <h2 class="card-title">Generation History</h2>
+        <button class="clear-history-btn" id="clearHistoryBtn">Clear All</button>
+      </div>
+      <div class="history-list" id="historyList">
+        <div class="history-empty">No barcodes generated yet</div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <p class="footer-brand">Created by Prathamesh Prashant Pawar</p>
+      
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
