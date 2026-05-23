@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    
     <title>ISBN Barcode & QR Generator</title>
+
     <meta name="description" content="Professional ISBN Barcode and QR Code Generator created by Prathamesh Prashant Pawar">
 
     <!-- Barcode CDN -->
@@ -14,104 +16,94 @@
 
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-    <div class="container">
+<div class="container">
 
-        <!-- Header -->
-        <header>
-            <h1>📚 ISBN Barcode & QR Generator</h1>
-            <p>Created by Prathamesh Prashant Pawar</p>
-        </header>
+    <!-- Header -->
+    <header>
+        <h1>📚 ISBN Barcode & QR Generator</h1>
+        <p>Created by Prathamesh Prashant Pawar</p>
+    </header>
 
-        <!-- Main Card -->
-        <div class="card">
+    <!-- Main Card -->
+    <div class="card">
 
-            <input 
-                type="text" 
-                id="barcodeInput"
-                placeholder="Enter ISBN or Number"
-                value="9783161484100"
-                autofocus
-            >
+        <input 
+            type="text" 
+            id="barcodeInput"
+            placeholder="Enter ISBN or Number"
+            value="9783161484100"
+            autofocus
+        >
 
-            <select id="barcodeType">
-                <option value="EAN13">EAN-13</option>
-                <option value="CODE128">CODE128</option>
-            </select>
+        <select id="barcodeType">
+            <option value="EAN13">EAN-13</option>
+            <option value="CODE128">CODE128</option>
+        </select>
 
-            <div class="buttons">
-                <button onclick="generateCode()">Generate</button>
-                <button onclick="downloadBarcode()">Download</button>
-                <button onclick="printCode()">Print</button>
-                <button onclick="copyText()">Copy</button>
-                <button onclick="clearAll()">Clear</button>
-            </div>
-
-            <!-- Loader -->
-            <div id="loader" class="loader"></div>
-
-            <!-- Barcode -->
-            <div class="output">
-                <svg id="barcode"></svg>
-            </div>
-
-            <!-- QR -->
-            <div id="qrcode"></div>
-
-            <!-- Success Message -->
-            <p id="message"></p>
-
+        <div class="buttons">
+            <button onclick="generateCode()">Generate</button>
+            <button onclick="downloadBarcode()">Download</button>
+            <button onclick="printCode()">Print</button>
+            <button onclick="copyText()">Copy</button>
+            <button onclick="clearAll()">Clear</button>
         </div>
 
-        <!-- History -->
-        <div class="history-card">
-            <h2>📜 Generation History</h2>
-            <ul id="historyList"></ul>
+        <!-- Loader -->
+        <div id="loader" class="loader"></div>
+
+        <!-- Barcode -->
+        <div class="output">
+            <svg id="barcode"></svg>
         </div>
 
-        <!-- Footer -->
-        <footer>
-            Created by Prathamesh Prashant Pawar
-        </footer>
+        <!-- QR -->
+        <div id="qrcode"></div>
+
+        <!-- Success Message -->
+        <p id="message"></p>
 
     </div>
 
+    <!-- History -->
+    <div class="history-card">
+        <h2>📜 Generation History</h2>
+        <ul id="historyList"></ul>
+    </div>
+
+    <!-- Camera Scanner -->
+    <hr>
+
+    <h2 style="text-align:center;">📷 Camera Scanner</h2>
+
+    <div style="text-align:center; margin-top:20px;">
+
+        <video 
+            id="scannerVideo"
+            autoplay
+            playsinline
+            width="300"
+            style="border:2px solid white; border-radius:10px;">
+        </video>
+
+        <br><br>
+
+        <button onclick="startScanner()">
+            Start Camera Scanner
+        </button>
+
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        Created by Prathamesh Prashant Pawar
+    </footer>
+
+</div>
+
 <script src="script.js"></script>
-
-<div class="scanner-section">
-    <h2>Camera Scanner</h2>
-
-    <video id="scannerVideo" autoplay playsinline width="300"></video>
-
-    <br><br>
-
-    <button onclick="startScanner()">
-        Start Camera Scanner
-    </button>
-</div>
-
-<hr>
-
-<h2 style="text-align:center;">Camera Scanner</h2>
-
-<div style="text-align:center; margin-top:20px;">
-
-<video 
-id="scannerVideo" 
-autoplay 
-playsinline 
-width="300"
-style="border:2px solid white; border-radius:10px;">
-</video>
-
-<br><br>
-
-<button onclick="startScanner()">
-Start Camera Scanner
-</button>
-
-</div>
 
 </body>
 </html>
