@@ -130,3 +130,17 @@ function addHistory(value, type){
         historyList.removeChild(historyList.lastChild);
     }
 }
+
+async function startScanner() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment" }
+        });
+
+        const video = document.getElementById("scannerVideo");
+        video.srcObject = stream;
+
+    } catch (error) {
+        alert("Camera access denied!");
+    }
+}
