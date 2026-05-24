@@ -75,9 +75,9 @@ function switchPreview(type, btn) {
 
 /* ── VALIDATION ── */
 const validators = {
-  EAN13:   v => { const c = v.replace(/\D/g,''); return c.length===13 ? {ok:true,val:c} : {ok:false,msg:'EAN-13 ला 13 digits लागतात.'}; },
-  ISBN:    v => { const c = v.replace(/[^0-9X]/gi,'').toUpperCase(); return (c.length===10||c.length===13) ? {ok:true,val:c} : {ok:false,msg:'ISBN 10 किंवा 13 digits असावे.'}; },
-  CODE128: v => v.trim().length ? {ok:true,val:v.trim()} : {ok:false,msg:'Value टाका.'}
+  EAN13:   v => { const c = v.replace(/\D/g,''); return c.length===13 ? {ok:true,val:c} : {ok:false,msg:'EAN-13 requires exactly 13 digits.'}; },
+  ISBN:    v => { const c = v.replace(/[^0-9X]/gi,'').toUpperCase(); return (c.length===10||c.length===13) ? {ok:true,val:c} : {ok:false,msg:'ISBN must be 10 or 13 digits.'}; },
+  CODE128: v => v.trim().length ? {ok:true,val:v.trim()} : {ok:false,msg:'Please enter a value.'}
 };
 
 /* ── MESSAGE ── */
@@ -130,7 +130,7 @@ function generateBarcode() {
       actionRow.style.display = 'flex';
       lastGenerated = { value: v.val, type, time: ts };
       addToHistory(v.val, type, ts);
-      showMessage('✓ Barcode आणि QR Code तयार!', 'success');
+      showMessage('✓ Barcode and QR Code generated!', 'success');
     } catch(err) {
       showMessage('✗ ' + err.message, 'error');
     }
@@ -313,7 +313,7 @@ function generateBulk() {
   const actionsEl = document.getElementById('bulkActions');
   resultsEl.innerHTML = '';
 
-  if (!lines.length) { alert('Numbers टाका!'); return; }
+  if (!lines.length) { alert('Please enter numbers!'); return; }
 
   lines.forEach((line, idx) => {
     const v = validators[type](line);
@@ -393,16 +393,16 @@ function startScanner() {
     { fps: 10, qrbox: { width: 250, height: 250 } },
     decodedText => {
       resultEl.style.display = 'block';
-      resultEl.innerHTML = `✅ Scan झाले!<br/><strong style="font-size:1rem;">${decodedText}</strong><br/>
+      resultEl.innerHTML = `✅ Scanned Successfully!<br/><strong style="font-size:1rem;">${decodedText}</strong><br/>
         <button class="btn btn-outline btn-sm" style="margin-top:10px;" onclick="useScanResult('${decodedText}')">
-          ↩ Generate करा
+          ↩ Use this value
         </button>`;
       stopScanner();
     },
     () => {}
   ).catch(err => {
     resultEl.style.display = 'block';
-    resultEl.innerHTML = `❌ Camera उघडता आले नाही.<br/><small>${err}</small>`;
+    resultEl.innerHTML = `❌ Could not open camera.<br/><small>${err}</small>`;
     stopBtn.style.display = 'none';
     startBtn.style.display = 'inline-flex';
   });
@@ -439,7 +439,7 @@ input.addEventListener('keydown', e => { if (e.key === 'Enter') generateBarcode(
 let lastClick = 0;
 generateBtn.addEventListener('click', () => {
   const now = Date.now();
-  if (now - lastClick < 800) { showMessage('⚠ थोडा वेळ थांबा!', 'error'); return; }
+  if (now - lastClick < 800) { showMessage('⚠ Please wait a moment!', 'error'); return; }
   lastClick = now;
 });
 
