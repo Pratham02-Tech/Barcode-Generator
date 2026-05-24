@@ -1,109 +1,223 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    
-    <title>ISBN Barcode & QR Generator</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ISBN Barcode Generator — Prathamesh Prashant Pawar</title>
+  <meta name="description" content="Professional ISBN Barcode & QR Generator by Prathamesh Prashant Pawar. Free, fast, offline-ready."/>
+  <meta name="robots" content="index, follow"/>
 
-    <meta name="description" content="Professional ISBN Barcode and QR Code Generator created by Prathamesh Prashant Pawar">
+  <!-- Security Headers via Meta -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff"/>
+  <meta http-equiv="X-Frame-Options" content="SAMEORIGIN"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://fonts.googleapis.com https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;"/>
 
-    <!-- Barcode CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  <!-- CDNs -->
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-    <!-- QR Code CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
-    <link rel="stylesheet" href="style.css">
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
 </head>
-
 <body>
 
-<div class="container">
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo-block">
+        <div class="logo-icon">
+          <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="2"  y="5" width="4" height="26" rx="1.5" fill="currentColor"/>
+            <rect x="8"  y="5" width="2" height="26" rx="1" fill="currentColor" opacity=".7"/>
+            <rect x="12" y="5" width="5" height="26" rx="1.5" fill="currentColor"/>
+            <rect x="19" y="5" width="2" height="26" rx="1" fill="currentColor" opacity=".7"/>
+            <rect x="23" y="5" width="4" height="26" rx="1.5" fill="currentColor"/>
+            <rect x="29" y="5" width="2" height="26" rx="1" fill="currentColor" opacity=".7"/>
+            <rect x="33" y="5" width="3" height="26" rx="1.5" fill="currentColor"/>
+          </svg>
+        </div>
+        <div>
+          <div class="logo-title">BarcodeForge</div>
+          <div class="logo-sub">by Prathamesh Prashant Pawar</div>
+        </div>
+      </div>
+      <nav class="nav-tabs">
+        <button class="nav-tab active" onclick="showTab('generate')">Generate</button>
+        <button class="nav-tab" onclick="showTab('bulk')">Bulk</button>
+        <button class="nav-tab" onclick="showTab('scanner')">Scanner</button>
+        <button class="nav-tab" onclick="showTab('history')">History</button>
+      </nav>
+    </div>
+  </header>
 
-    <!-- Header -->
-    <header>
-        <h1>📚 ISBN Barcode & QR Generator</h1>
-        <p>Created by Prathamesh Prashant Pawar</p>
-    </header>
+  <main class="main">
 
-    <!-- Main Card -->
-    <div class="card">
+    <!-- ===== TAB: GENERATE ===== -->
+    <div id="tab-generate" class="tab-content active">
 
-        <input 
-            type="text" 
-            id="barcodeInput"
-            placeholder="Enter ISBN or Number"
-            value="9783161484100"
-            autofocus
-        >
+      <div class="hero-section">
+        <div class="hero-text">
+          <h1 class="hero-title">Create Professional<br/><span class="gradient-text">Barcodes & QR Codes</span></h1>
+          <p class="hero-desc">ISBN • EAN-13 • CODE128 — Instant, scannable, downloadable</p>
+        </div>
+      </div>
 
-        <select id="barcodeType">
-            <option value="EAN13">EAN-13</option>
+      <div class="two-col">
+
+        <!-- Input Card -->
+        <div class="card input-card">
+          <div class="card-label">⚙ Configuration</div>
+
+          <div class="field-group">
+            <label class="field-label">Number / ISBN</label>
+            <div class="input-row">
+              <input type="text" id="barcodeInput" class="field-input"
+                placeholder="9788199097148" value="9788199097148" autocomplete="off" autofocus/>
+              <button class="icon-btn" id="copyBtn" title="Copy">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label">Type</label>
+              <select id="barcodeType" class="field-select">
+                <option value="EAN13" selected>EAN-13 (ISBN)</option>
+                <option value="CODE128">CODE128</option>
+                <option value="ISBN">ISBN</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Bar Width</label>
+              <select id="barcodeWidth" class="field-select">
+                <option value="1">Narrow</option>
+                <option value="2" selected>Standard</option>
+                <option value="3">Wide</option>
+              </select>
+            </div>
+          </div>
+
+          <button class="btn btn-generate" id="generateBtn">
+            <span id="btnText">Generate</span>
+            <span class="btn-loader" id="btnLoader"></span>
+          </button>
+
+          <div class="message" id="message"></div>
+        </div>
+
+        <!-- Preview Card -->
+        <div class="card preview-card">
+          <div class="card-label">👁 Preview</div>
+          <div class="preview-timestamp" id="timestamp"></div>
+
+          <div class="preview-tabs">
+            <button class="preview-tab active" onclick="switchPreview('barcode', this)">Barcode</button>
+            <button class="preview-tab" onclick="switchPreview('qr', this)">QR Code</button>
+          </div>
+
+          <div class="preview-box" id="previewBarcode">
+            <div class="empty-state" id="barcodePlaceholder">
+              <div class="empty-icon">▦</div>
+              <p>Generate to preview</p>
+            </div>
+            <canvas id="barcodeCanvas" style="display:none; max-width:100%;"></canvas>
+          </div>
+
+          <div class="preview-box" id="previewQR" style="display:none;">
+            <div class="empty-state" id="qrPlaceholder">
+              <div class="empty-icon">⬛</div>
+              <p>Generate to preview</p>
+            </div>
+            <div id="qrcode" style="display:none; justify-content:center; align-items:center;"></div>
+          </div>
+
+          <div class="action-row" id="actionRow" style="display:none;">
+            <button class="btn btn-sm btn-outline" id="downloadBtn">⬇ PNG</button>
+            <button class="btn btn-sm btn-outline" id="downloadQRBtn">⬇ QR PNG</button>
+            <button class="btn btn-sm btn-outline" id="pdfBtn">📄 PDF</button>
+            <button class="btn btn-sm btn-outline" id="printBtn">🖨 Print</button>
+            <button class="btn btn-sm btn-ghost" id="clearBtn">✕ Clear</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===== TAB: BULK ===== -->
+    <div id="tab-bulk" class="tab-content">
+      <div class="card">
+        <div class="card-label">📦 Bulk Barcode Generator</div>
+        <p class="card-desc">एकावेळी अनेक barcodes तयार करा — प्रत्येक line = एक barcode</p>
+
+        <div class="field-group" style="margin-top:16px;">
+          <label class="field-label">Barcode Type</label>
+          <select id="bulkType" class="field-select" style="max-width:250px;">
+            <option value="EAN13" selected>EAN-13 (ISBN)</option>
             <option value="CODE128">CODE128</option>
-        </select>
-
-        <div class="buttons">
-            <button onclick="generateCode()">Generate</button>
-            <button onclick="downloadBarcode()">Download</button>
-            <button onclick="printCode()">Print</button>
-            <button onclick="copyText()">Copy</button>
-            <button onclick="clearAll()">Clear</button>
+          </select>
         </div>
 
-        <!-- Loader -->
-        <div id="loader" class="loader"></div>
-
-        <!-- Barcode -->
-        <div class="output">
-            <svg id="barcode"></svg>
+        <div class="field-group" style="margin-top:14px;">
+          <label class="field-label">Numbers (एक ओळीत एक number)</label>
+          <textarea id="bulkInput" class="bulk-textarea"
+            placeholder="9788199097148&#10;9788199097117&#10;9788199097124&#10;9788199097162"></textarea>
         </div>
 
-        <!-- QR -->
-        <div id="qrcode"></div>
-
-        <!-- Success Message -->
-        <p id="message"></p>
-
-    </div>
-
-    <!-- History -->
-    <div class="history-card">
-        <h2>📜 Generation History</h2>
-        <ul id="historyList"></ul>
-    </div>
-
-    <!-- Camera Scanner -->
-    <hr>
-
-    <h2 style="text-align:center;">📷 Camera Scanner</h2>
-
-    <div style="text-align:center; margin-top:20px;">
-
-        <video 
-            id="scannerVideo"
-            autoplay
-            playsinline
-            width="300"
-            style="border:2px solid white; border-radius:10px;">
-        </video>
-
-        <br><br>
-
-        <button onclick="startScanner()">
-            Start Camera Scanner
+        <button class="btn btn-generate" style="max-width:300px; margin-top:16px;" onclick="generateBulk()">
+          Generate All Barcodes
         </button>
 
+        <div class="bulk-results" id="bulkResults"></div>
+
+        <div id="bulkActions" style="display:none; margin-top:16px;">
+          <button class="btn btn-outline" onclick="downloadAllPDF()">📄 सर्व PDF Download करा</button>
+        </div>
+      </div>
     </div>
 
-    <!-- Footer -->
-    <footer>
-        Created by Prathamesh Prashant Pawar
-    </footer>
+    <!-- ===== TAB: SCANNER ===== -->
+    <div id="tab-scanner" class="tab-content">
+      <div class="card">
+        <div class="card-label">📷 Camera Scanner</div>
+        <p class="card-desc">Camera ने Barcode किंवा QR Code scan करा</p>
 
-</div>
+        <div id="reader" style="display:none; margin:16px 0; border-radius:12px; overflow:hidden;"></div>
+        <div id="scanResult" class="scan-result-box" style="display:none;"></div>
 
-<script src="script.js"></script>
+        <div class="action-row" style="margin-top:16px;">
+          <button class="btn btn-generate" id="startScanBtn" onclick="startScanner()" style="max-width:260px;">
+            📷 Start Camera Scanner
+          </button>
+          <button class="btn btn-ghost" id="stopScanBtn" onclick="stopScanner()" style="display:none;">
+            ✕ Stop
+          </button>
+        </div>
+      </div>
+    </div>
 
+    <!-- ===== TAB: HISTORY ===== -->
+    <div id="tab-history" class="tab-content">
+      <div class="card">
+        <div class="history-header">
+          <div class="card-label">📜 Generation History</div>
+          <button class="btn btn-ghost btn-sm" onclick="clearHistory()">Clear All</button>
+        </div>
+        <div class="history-list" id="historyList">
+          <div class="empty-state"><div class="empty-icon">🕐</div><p>No history yet</p></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="footer">
+    <p>BarcodeForge &nbsp;·&nbsp; Created by <strong>Prathamesh Prashant Pawar</strong> &nbsp;·&nbsp; Free Forever</p>
+  </footer>
+
+  <script src="script.js"></script>
 </body>
 </html>
