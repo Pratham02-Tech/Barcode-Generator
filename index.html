@@ -151,7 +151,7 @@
     <div id="tab-bulk" class="tab-content">
       <div class="card">
         <div class="card-label">📦 Bulk Barcode Generator</div>
-        <p class="card-desc">एकावेळी अनेक barcodes तयार करा — प्रत्येक line = एक barcode</p>
+        <p class="card-desc">Generate multiple barcodes at once — one number per line</p>
 
         <div class="field-group" style="margin-top:16px;">
           <label class="field-label">Barcode Type</label>
@@ -162,7 +162,7 @@
         </div>
 
         <div class="field-group" style="margin-top:14px;">
-          <label class="field-label">Numbers (एक ओळीत एक number)</label>
+          <label class="field-label">Numbers (one per line)</label>
           <textarea id="bulkInput" class="bulk-textarea"
             placeholder="9788199097148&#10;9788199097117&#10;9788199097124&#10;9788199097162"></textarea>
         </div>
@@ -174,7 +174,7 @@
         <div class="bulk-results" id="bulkResults"></div>
 
         <div id="bulkActions" style="display:none; margin-top:16px;">
-          <button class="btn btn-outline" onclick="downloadAllPDF()">📄 सर्व PDF Download करा</button>
+          <button class="btn btn-outline" onclick="downloadAllPDF()">📄 Download All as PDF</button>
         </div>
       </div>
     </div>
@@ -183,7 +183,7 @@
     <div id="tab-scanner" class="tab-content">
       <div class="card">
         <div class="card-label">📷 Camera Scanner</div>
-        <p class="card-desc">Camera ने Barcode किंवा QR Code scan करा</p>
+        <p class="card-desc">Scan Barcode or QR Code using your camera</p>
 
         <div id="reader" style="display:none; margin:16px 0; border-radius:12px; overflow:hidden;"></div>
         <div id="scanResult" class="scan-result-box" style="display:none;"></div>
