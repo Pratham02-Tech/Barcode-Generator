@@ -1,68 +1,73 @@
 /**
- * BarcodeForge — script.js
+ * BarcodeForge PWA — script.js
  * Created by Prathamesh Prashant Pawar
- * Features: Generate, QR, PDF, Bulk, Camera Scanner, History, Hack Protection
+ * Android + iOS installable app
  */
-
 'use strict';
 
 /* ── HACK PROTECTION ── */
-// Disable right-click
 document.addEventListener('contextmenu', e => e.preventDefault());
-// Disable F12, Ctrl+U, Ctrl+Shift+I, Ctrl+Shift+J
 document.addEventListener('keydown', e => {
-  if (e.key === 'F12' || (e.ctrlKey && ['u','U'].includes(e.key)) ||
-      (e.ctrlKey && e.shiftKey && ['i','I','j','J','c','C'].includes(e.key))) {
-    e.preventDefault(); return false;
-  }
-});
-// Detect devtools open (basic)
-
-// Disable text selection on sensitive areas
-document.addEventListener('selectstart', e => {
-  if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') e.preventDefault();
+  if (e.key==='F12'||(e.ctrlKey&&['u','U'].includes(e.key))||(e.ctrlKey&&e.shiftKey&&['i','I','j','J'].includes(e.key)))
+    { e.preventDefault(); return false; }
 });
 
-/* ── DOM ── */
-const input       = document.getElementById('barcodeInput');
-const typeSelect  = document.getElementById('barcodeType');
-const widthSelect = document.getElementById('barcodeWidth');
-const generateBtn = document.getElementById('generateBtn');
-const canvas      = document.getElementById('barcodeCanvas');
-const placeholder = document.getElementById('barcodePlaceholder');
-const actionRow   = document.getElementById('actionRow');
-const messageEl   = document.getElementById('message');
-const timestampEl = document.getElementById('timestamp');
-const historyListEl = document.getElementById('historyList');
-const qrDiv       = document.getElementById('qrcode');
-const qrPlaceholder = document.getElementById('qrPlaceholder');
+/* ── PWA INSTALL ── */
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('installBanner').style.display = 'flex';
+});
 
-let history = JSON.parse(localStorage.getItem('bcHistory') || '[]');
+document.getElementById('installBtn')?.addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === 'accepted') document.getElementById('installBanner').style.display = 'none';
+  deferredPrompt = null;
+});
+
+document.getElementById('dismissBtn')?.addEventListener('click', () => {
+  document.getElementById('installBanner').style.display = 'none';
+});
+
+window.addEventListener('appinstalled', () => {
+  document.getElementById('installBanner').style.display = 'none';
+  showMessage('✓ App installed successfully!', 'success');
+});
+
+/* ── SERVICE WORKER ── */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(reg => console.log('SW registered:', reg.scope))
+      .catch(err => console.log('SW error:', err));
+  });
+}
+
+/* ── STATE ── */
 let lastGenerated = null;
-let qrInstance = null;
-let html5Scanner = null;
+let qrInstance    = null;
+let html5Scanner  = null;
 let scannerRunning = false;
+let history = JSON.parse(localStorage.getItem('bf_history') || '[]');
 
 /* ── TABS ── */
-function showTab(name) {
+function showTab(name, btn) {
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.bnav-btn').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
-  event.target.classList.add('active');
+  if (btn) btn.classList.add('active');
   if (name === 'history') renderHistory();
 }
 
-/* ── PREVIEW TABS ── */
+/* ── PREVIEW TOGGLE ── */
 function switchPreview(type, btn) {
-  document.querySelectorAll('.preview-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.ptab').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
-  if (type === 'barcode') {
-    document.getElementById('previewBarcode').style.display = 'flex';
-    document.getElementById('previewQR').style.display = 'none';
-  } else {
-    document.getElementById('previewBarcode').style.display = 'none';
-    document.getElementById('previewQR').style.display = 'flex';
-  }
+  document.getElementById('previewBarcode').style.display = type === 'barcode' ? 'flex' : 'none';
+  document.getElementById('previewQR').style.display      = type === 'qr'      ? 'flex' : 'none';
 }
 
 /* ── VALIDATION ── */
@@ -74,37 +79,41 @@ const validators = {
 
 /* ── MESSAGE ── */
 function showMessage(text, type='success') {
-  messageEl.textContent = text;
-  messageEl.className = `message ${type} show`;
-  clearTimeout(messageEl._t);
-  messageEl._t = setTimeout(() => messageEl.classList.remove('show'), 4000);
+  const el = document.getElementById('message');
+  el.textContent = text;
+  el.className = `message ${type} show`;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 4000);
 }
 
 /* ── GENERATE ── */
 function generateBarcode() {
-  const raw  = input.value.trim();
-  const type = typeSelect.value;
-  const w    = parseInt(widthSelect.value);
+  const raw  = document.getElementById('barcodeInput').value.trim();
+  const type = document.getElementById('barcodeType').value;
+  const w    = parseInt(document.getElementById('barcodeWidth').value);
   const v    = validators[type](raw);
-  if (!v.ok) { showMessage('⚠ ' + v.msg, 'error'); input.focus(); return; }
+  if (!v.ok) { showMessage('⚠ ' + v.msg, 'error'); return; }
 
-  generateBtn.classList.add('loading');
-  generateBtn.disabled = true;
+  const btn = document.getElementById('generateBtn');
+  btn.classList.add('loading'); btn.disabled = true;
 
   setTimeout(() => {
     try {
-      // Barcode
+      // ── Barcode ──
+      const canvas = document.getElementById('barcodeCanvas');
       canvas.style.display = 'block';
-      placeholder.style.display = 'none';
+      document.getElementById('barcodePlaceholder').style.display = 'none';
       document.getElementById('previewBarcode').classList.add('filled');
 
       JsBarcode(canvas, v.val, {
-        format: type, width: w, height: 100,
-        displayValue: false, background: '#ffffff',
-        lineColor: '#000000', margin: 18
+        format: type, width: w, height: 90,
+        displayValue: false,
+        background: '#ffffff', lineColor: '#000000',
+        margin: 16
       });
 
-      // QR
+      // ── QR Code ──
+      const qrDiv = document.getElementById('qrcode');
       qrDiv.innerHTML = '';
       qrInstance = new QRCode(qrDiv, {
         text: v.val, width: 180, height: 180,
@@ -112,23 +121,27 @@ function generateBarcode() {
         correctLevel: QRCode.CorrectLevel.H
       });
       qrDiv.style.display = 'flex';
-      qrPlaceholder.style.display = 'none';
+      document.getElementById('qrPlaceholder').style.display = 'none';
       document.getElementById('previewQR').classList.add('filled');
 
-      // Timestamp
+      // ── Timestamp ──
       const now = new Date();
-      const ts = now.toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
-      timestampEl.textContent = ts;
-      actionRow.style.display = 'flex';
+      const ts  = now.toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+      document.getElementById('timestamp').textContent = ts;
+      document.getElementById('actionRow').style.display = 'grid';
+
       lastGenerated = { value: v.val, type, time: ts };
       addToHistory(v.val, type, ts);
       showMessage('✓ Barcode and QR Code generated!', 'success');
-    } catch(err) {
-      showMessage('✗ ' + err.message, 'error');
-    }
-    generateBtn.classList.remove('loading');
-    generateBtn.disabled = false;
-  }, 350);
+
+      // Haptic feedback on mobile
+      if (navigator.vibrate) navigator.vibrate(50);
+
+    } catch(e) { showMessage('✗ ' + e.message, 'error'); }
+
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }, 300);
 }
 
 /* ── DOWNLOAD PNG ── */
@@ -136,90 +149,117 @@ function downloadBarcode() {
   if (!lastGenerated) return;
   const a = document.createElement('a');
   a.download = `barcode_${lastGenerated.value}.png`;
-  a.href = canvas.toDataURL('image/png');
+  a.href = document.getElementById('barcodeCanvas').toDataURL('image/png');
   a.click();
-  showMessage('✓ Barcode PNG downloaded!', 'success');
+  showMessage('✓ Barcode downloaded!', 'success');
 }
 
 function downloadQR() {
   if (!lastGenerated) return;
-  const img = qrDiv.querySelector('img');
-  if (!img) return;
-  const a = document.createElement('a');
-  a.download = `qr_${lastGenerated.value}.png`;
-  a.href = img.src;
-  a.click();
-  showMessage('✓ QR PNG downloaded!', 'success');
+
+  // QRCode library creates a canvas OR img depending on browser
+  const qrDiv = document.getElementById('qrcode');
+
+  // Try canvas first
+  const qrCanvas = qrDiv.querySelector('canvas');
+  if (qrCanvas) {
+    const a = document.createElement('a');
+    a.download = `qr_${lastGenerated.value}.png`;
+    a.href = qrCanvas.toDataURL('image/png');
+    a.click();
+    showMessage('✓ QR Code downloaded!', 'success');
+    return;
+  }
+
+  // Try img tag — draw on temp canvas
+  const qrImg = qrDiv.querySelector('img');
+  if (qrImg) {
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width  = 200;
+    tempCanvas.height = 200;
+    const ctx = tempCanvas.getContext('2d');
+    const image = new Image();
+    image.crossOrigin = 'anonymous';
+    image.onload = () => {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, 200, 200);
+      ctx.drawImage(image, 0, 0, 200, 200);
+      const a = document.createElement('a');
+      a.download = `qr_${lastGenerated.value}.png`;
+      a.href = tempCanvas.toDataURL('image/png');
+      a.click();
+      showMessage('✓ QR Code downloaded!', 'success');
+    };
+    image.src = qrImg.src;
+    return;
+  }
+
+  showMessage('⚠ QR Code not found. Generate first!', 'error');
 }
 
 /* ── PDF DOWNLOAD ── */
 async function downloadPDF() {
   if (!lastGenerated) return;
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-  // Header
-  doc.setFillColor(6, 8, 15);
-  doc.rect(0, 0, 210, 297, 'F');
-  doc.setTextColor(0, 229, 255);
-  doc.setFontSize(22);
-  doc.setFont('helvetica','bold');
-  doc.text('BarcodeForge', 105, 24, { align: 'center' });
-  doc.setTextColor(122, 138, 170);
-  doc.setFontSize(10);
-  doc.setFont('helvetica','normal');
-  doc.text('Created by Prathamesh Prashant Pawar', 105, 32, { align: 'center' });
+    // Dark background
+    doc.setFillColor(6, 8, 15);
+    doc.rect(0, 0, 210, 297, 'F');
 
-  // Divider
-  doc.setDrawColor(0, 229, 255);
-  doc.setLineWidth(0.3);
-  doc.line(20, 37, 190, 37);
+    // Header
+    doc.setTextColor(0, 229, 255);
+    doc.setFontSize(24); doc.setFont('helvetica', 'bold');
+    doc.text('BarcodeForge', 105, 24, { align: 'center' });
+    doc.setTextColor(122, 138, 170);
+    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+    doc.text('Created by Prathamesh Prashant Pawar', 105, 33, { align: 'center' });
 
-  // Barcode image
-  const bcData = canvas.toDataURL('image/png');
-  doc.addImage(bcData, 'PNG', 40, 48, 130, 55);
+    // Divider
+    doc.setDrawColor(0, 229, 255); doc.setLineWidth(0.3);
+    doc.line(20, 39, 190, 39);
 
-  // QR image
-  const qrImg = qrDiv.querySelector('img');
-  if (qrImg) {
-    doc.addImage(qrImg.src, 'PNG', 75, 115, 60, 60);
-  }
+    // Barcode image
+    const bcData = document.getElementById('barcodeCanvas').toDataURL('image/png');
+    doc.addImage(bcData, 'PNG', 35, 48, 140, 56);
 
-  // Info
-  doc.setTextColor(240, 244, 255);
-  doc.setFontSize(13);
-  doc.setFont('helvetica','bold');
-  doc.text(lastGenerated.value, 105, 188, { align: 'center' });
-  doc.setTextColor(122, 138, 170);
-  doc.setFontSize(9);
-  doc.setFont('helvetica','normal');
-  doc.text(`Type: ${lastGenerated.type}   |   Generated: ${lastGenerated.time}`, 105, 196, { align: 'center' });
+    // QR Code
+    const qrImg = document.getElementById('qrcode').querySelector('img');
+    if (qrImg) doc.addImage(qrImg.src, 'PNG', 75, 116, 60, 60);
 
-  // Footer
-  doc.setTextColor(61, 77, 102);
-  doc.setFontSize(8);
-  doc.text('BarcodeForge · Professional Publishing Tool · Free Forever', 105, 285, { align: 'center' });
+    // Value
+    doc.setTextColor(240, 244, 255);
+    doc.setFontSize(14); doc.setFont('helvetica', 'bold');
+    doc.text(lastGenerated.value, 105, 190, { align: 'center' });
+    doc.setTextColor(122, 138, 170);
+    doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+    doc.text(`Type: ${lastGenerated.type}   |   Generated: ${lastGenerated.time}`, 105, 198, { align: 'center' });
 
-  doc.save(`barcode_${lastGenerated.value}.pdf`);
-  showMessage('✓ PDF downloaded!', 'success');
+    // Footer
+    doc.setTextColor(61, 77, 102); doc.setFontSize(8);
+    doc.text('BarcodeForge · Professional Publishing Tool · Free Forever', 105, 284, { align: 'center' });
+
+    doc.save(`barcode_${lastGenerated.value}.pdf`);
+    showMessage('✓ PDF downloaded!', 'success');
+  } catch(e) { showMessage('✗ PDF error: ' + e.message, 'error'); }
 }
 
 /* ── PRINT ── */
 function printBarcode() {
   if (!lastGenerated) return;
-  const bcData = canvas.toDataURL('image/png');
-  const qrImg  = qrDiv.querySelector('img');
-  const qrSrc  = qrImg ? qrImg.src : '';
-  const w = window.open('','_blank','width=600,height=520');
-  w.document.write(`<!DOCTYPE html><html><head><title>Print</title>
-  <style>body{margin:0;font-family:'Courier New',monospace;background:#fff;display:flex;flex-direction:column;align-items:center;padding:30px;}
-  h2{font-size:14px;margin-bottom:4px;}p{font-size:11px;color:#555;margin:4px 0;}
-  .row{display:flex;gap:40px;align-items:center;margin:20px 0;}img{display:block;}
+  const bcData = document.getElementById('barcodeCanvas').toDataURL('image/png');
+  const qrImg  = document.getElementById('qrcode').querySelector('img');
+  const w = window.open('', '_blank', 'width=600,height=500');
+  w.document.write(`<!DOCTYPE html><html><head><title>Print Barcode</title>
+  <style>body{margin:0;font-family:'Courier New',monospace;background:#fff;display:flex;flex-direction:column;align-items:center;padding:28px;}
+  h2{font-size:13px;margin-bottom:3px;}p{font-size:10px;color:#555;margin:3px 0;}
+  .row{display:flex;gap:32px;align-items:center;margin:16px 0;}img{display:block;}
   </style></head><body>
   <h2>BarcodeForge — Prathamesh Prashant Pawar</h2>
   <div class="row">
-    <div><p>Barcode</p><img src="${bcData}" style="max-width:220px;"/></div>
-    ${qrSrc?`<div><p>QR Code</p><img src="${qrSrc}" style="width:140px;height:140px;"/></div>`:''}
+    <div><p>Barcode</p><img src="${bcData}" style="max-width:200px;"/></div>
+    ${qrImg ? `<div><p>QR Code</p><img src="${qrImg.src}" style="width:130px;height:130px;"/></div>` : ''}
   </div>
   <p><strong>${lastGenerated.value}</strong> · ${lastGenerated.type} · ${lastGenerated.time}</p>
   <script>window.onload=function(){window.print();window.close();}<\/script>
@@ -229,86 +269,92 @@ function printBarcode() {
 
 /* ── CLEAR ── */
 function clearAll() {
+  const canvas = document.getElementById('barcodeCanvas');
   canvas.style.display = 'none';
-  placeholder.style.display = 'flex';
+  document.getElementById('barcodePlaceholder').style.display = 'flex';
   document.getElementById('previewBarcode').classList.remove('filled');
+
+  const qrDiv = document.getElementById('qrcode');
   qrDiv.innerHTML = ''; qrDiv.style.display = 'none';
-  qrPlaceholder.style.display = 'flex';
+  document.getElementById('qrPlaceholder').style.display = 'flex';
   document.getElementById('previewQR').classList.remove('filled');
-  actionRow.style.display = 'none';
-  timestampEl.textContent = '';
-  input.value = ''; lastGenerated = null;
-  messageEl.classList.remove('show');
-  input.focus();
+
+  document.getElementById('actionRow').style.display = 'none';
+  document.getElementById('timestamp').textContent = '';
+  document.getElementById('barcodeInput').value = '';
+  lastGenerated = null;
+  document.getElementById('message').classList.remove('show');
 }
 
 /* ── COPY ── */
 function copyNumber() {
-  const val = input.value.trim(); if (!val) return;
-  navigator.clipboard.writeText(val).then(() => {
-    showMessage('✓ Copied!', 'success');
-  }).catch(() => {
-    const t = document.createElement('textarea');
-    t.value = val; document.body.appendChild(t); t.select();
-    document.execCommand('copy'); document.body.removeChild(t);
-    showMessage('✓ Copied!', 'success');
-  });
+  const val = document.getElementById('barcodeInput').value.trim();
+  if (!val) return;
+  navigator.clipboard.writeText(val)
+    .then(() => { showMessage('✓ Copied!', 'success'); if (navigator.vibrate) navigator.vibrate(30); })
+    .catch(() => {
+      const t = document.createElement('textarea');
+      t.value = val; document.body.appendChild(t); t.select();
+      document.execCommand('copy'); document.body.removeChild(t);
+      showMessage('✓ Copied!', 'success');
+    });
 }
 
 /* ── HISTORY ── */
 function addToHistory(value, type, time) {
   if (history.length && history[0].value === value) return;
   history.unshift({ value, type, time });
-  if (history.length > 20) history.pop();
-  try { localStorage.setItem('bcHistory', JSON.stringify(history)); } catch(e){}
+  if (history.length > 30) history.pop();
+  try { localStorage.setItem('bf_history', JSON.stringify(history)); } catch(e) {}
 }
 
 function renderHistory() {
-  historyListEl.innerHTML = '';
+  const el = document.getElementById('historyList');
   if (!history.length) {
-    historyListEl.innerHTML = '<div class="empty-state"><div class="empty-icon">🕐</div><p>No history yet</p></div>';
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">🕐</div><p>No history yet</p></div>';
     return;
   }
+  el.innerHTML = '';
   history.forEach(item => {
     const d = document.createElement('div');
     d.className = 'history-item';
-    d.innerHTML = `<div class="history-dot"></div>
+    d.innerHTML = `
+      <div class="history-dot"></div>
       <div class="history-info">
         <div class="history-number">${item.value}</div>
         <div class="history-meta">${item.time}</div>
       </div>
       <span class="history-type">${item.type}</span>`;
     d.addEventListener('click', () => {
-      input.value = item.value; typeSelect.value = item.type;
-      showTab('generate');
-      document.querySelectorAll('.nav-tab')[0].classList.add('active');
-      document.querySelectorAll('.nav-tab').forEach((t,i) => { if(i>0) t.classList.remove('active'); });
+      document.getElementById('barcodeInput').value = item.value;
+      document.getElementById('barcodeType').value  = item.type;
+      showTab('generate', document.querySelector('.bnav-btn[data-tab="generate"]'));
       generateBarcode();
     });
-    historyListEl.appendChild(d);
+    el.appendChild(d);
   });
 }
 
 function clearHistory() {
+  if (!confirm('Clear all history?')) return;
   history = [];
-  try { localStorage.removeItem('bcHistory'); } catch(e){}
+  try { localStorage.removeItem('bf_history'); } catch(e) {}
   renderHistory();
   showMessage('History cleared.', 'success');
 }
 
 /* ── BULK GENERATOR ── */
 function generateBulk() {
-  const lines = document.getElementById('bulkInput').value
-    .split('\n').map(l=>l.trim()).filter(Boolean);
-  const type  = document.getElementById('bulkType').value;
-  const resultsEl = document.getElementById('bulkResults');
-  const actionsEl = document.getElementById('bulkActions');
-  resultsEl.innerHTML = '';
+  const lines   = document.getElementById('bulkInput').value.split('\n').map(l => l.trim()).filter(Boolean);
+  const type    = document.getElementById('bulkType').value;
+  const resEl   = document.getElementById('bulkResults');
+  const actEl   = document.getElementById('bulkActions');
+  resEl.innerHTML = '';
 
   if (!lines.length) { alert('Please enter numbers!'); return; }
 
-  lines.forEach((line, idx) => {
-    const v = validators[type](line);
+  lines.forEach(line => {
+    const v   = validators[type](line);
     const div = document.createElement('div');
 
     if (v.ok) {
@@ -316,62 +362,61 @@ function generateBulk() {
       const c = document.createElement('canvas');
       c.className = 'bulk-canvas';
       try {
-        JsBarcode(c, v.val, { format: type, width: 1.5, height: 50, displayValue: false, background:'#fff', lineColor:'#000', margin:8 });
+        JsBarcode(c, v.val, { format: type, width: 1.5, height: 44, displayValue: false, background: '#fff', lineColor: '#000', margin: 6 });
         div.innerHTML = `<span class="bulk-num">${v.val}</span>`;
         div.appendChild(c);
-        const badge = document.createElement('span'); badge.className='bulk-badge ok'; badge.textContent='OK'; div.appendChild(badge);
-        const btn = document.createElement('button'); btn.className='bulk-dl';
-        btn.textContent = '⬇ PNG';
-        btn.onclick = () => {
-          const a = document.createElement('a');
-          a.download = `barcode_${v.val}.png`;
-          a.href = c.toDataURL('image/png'); a.click();
-        };
+        const badge = document.createElement('span'); badge.className = 'bulk-badge ok'; badge.textContent = 'OK'; div.appendChild(badge);
+        const btn = document.createElement('button'); btn.className = 'bulk-dl'; btn.textContent = '⬇';
+        btn.onclick = () => { const a = document.createElement('a'); a.download = `barcode_${v.val}.png`; a.href = c.toDataURL('image/png'); a.click(); };
         div.appendChild(btn);
-      } catch(e) {
-        div.innerHTML = `<span class="bulk-num">${line}</span><span class="bulk-badge err">ERROR</span>`;
-      }
+      } catch(e) { div.innerHTML = `<span class="bulk-num">${line}</span><span class="bulk-badge err">ERROR</span>`; }
     } else {
       div.className = 'bulk-item error-item';
       div.innerHTML = `<span class="bulk-num">${line}</span><span class="bulk-badge err">❌ ${v.msg}</span>`;
     }
-    resultsEl.appendChild(div);
+    resEl.appendChild(div);
   });
-
-  actionsEl.style.display = 'block';
+  actEl.style.display = 'block';
 }
 
 async function downloadAllPDF() {
-  const { jsPDF } = window.jspdf;
-  const canvases = document.querySelectorAll('.bulk-canvas');
+  const { jsPDF }  = window.jspdf;
+  const canvases   = document.querySelectorAll('.bulk-canvas');
   if (!canvases.length) return;
+
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  doc.setFillColor(6, 8, 15); doc.rect(0, 0, 210, 297, 'F');
+  doc.setTextColor(0, 229, 255); doc.setFontSize(18); doc.setFont('helvetica', 'bold');
+  doc.text('BarcodeForge — Bulk Export', 105, 18, { align: 'center' });
+  doc.setTextColor(122, 138, 170); doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+  doc.text('Prathamesh Prashant Pawar', 105, 26, { align: 'center' });
 
-  doc.setFillColor(6,8,15); doc.rect(0,0,210,297,'F');
-  doc.setTextColor(0,229,255); doc.setFontSize(18); doc.setFont('helvetica','bold');
-  doc.text('BarcodeForge — Bulk Export', 105, 20, {align:'center'});
-  doc.setTextColor(122,138,170); doc.setFontSize(9); doc.setFont('helvetica','normal');
-  doc.text('Prathamesh Prashant Pawar', 105, 28, {align:'center'});
+  let y = 36;
+  const bw = 84, bh = 26, gap = 12, perRow = 2, xStart = 14;
 
-  let y = 40; const perRow = 2; const bw = 85; const bh = 30; const xStart = 15; const gap = 15;
   canvases.forEach((c, i) => {
     const col = i % perRow;
     const row = Math.floor(i / perRow);
-    const x = xStart + col * (bw + gap);
-    const yy = y + row * (bh + 20);
-    if (yy > 260) { doc.addPage(); doc.setFillColor(6,8,15); doc.rect(0,0,210,297,'F'); y = 10; }
-    doc.addImage(c.toDataURL('image/png'), 'PNG', x, y + row*(bh+20), bw, bh);
+    const xp  = xStart + col * (bw + gap);
+    const yp  = y + row * (bh + 20);
+    if (yp + bh > 265) {
+      doc.addPage();
+      doc.setFillColor(6, 8, 15); doc.rect(0, 0, 210, 297, 'F');
+      y = 14;
+    }
+    try { doc.addImage(c.toDataURL('image/png'), 'PNG', xp, y + row * (bh + 20), bw, bh); } catch(e) {}
   });
 
   doc.save('bulk_barcodes.pdf');
+  showMessage('✓ Bulk PDF downloaded!', 'success');
 }
 
 /* ── CAMERA SCANNER ── */
 function startScanner() {
-  const readerEl  = document.getElementById('reader');
-  const resultEl  = document.getElementById('scanResult');
-  const startBtn  = document.getElementById('startScanBtn');
-  const stopBtn   = document.getElementById('stopScanBtn');
+  const readerEl = document.getElementById('reader');
+  const resultEl = document.getElementById('scanResult');
+  const startBtn = document.getElementById('startScanBtn');
+  const stopBtn  = document.getElementById('stopScanBtn');
 
   readerEl.style.display = 'block';
   startBtn.style.display = 'none';
@@ -382,38 +427,38 @@ function startScanner() {
   html5Scanner = new Html5Qrcode('reader');
   html5Scanner.start(
     { facingMode: 'environment' },
-    { fps: 10, qrbox: { width: 250, height: 250 } },
+    { fps: 10, qrbox: { width: 240, height: 240 } },
     decodedText => {
       resultEl.style.display = 'block';
-      resultEl.innerHTML = `✅ Scanned Successfully!<br/><strong style="font-size:1rem;">${decodedText}</strong><br/>
+      resultEl.innerHTML = `✅ Scanned!<br/><strong style="font-size:1.05rem;">${decodedText}</strong><br/>
         <button class="btn btn-outline btn-sm" style="margin-top:10px;" onclick="useScanResult('${decodedText}')">
           ↩ Use this value
         </button>`;
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
       stopScanner();
     },
     () => {}
   ).catch(err => {
     resultEl.style.display = 'block';
-    resultEl.innerHTML = `❌ Could not open camera.<br/><small>${err}</small>`;
+    resultEl.innerHTML = `❌ Could not open camera.<br/><small style="color:var(--text3)">${err}</small>`;
     stopBtn.style.display = 'none';
     startBtn.style.display = 'inline-flex';
+    readerEl.style.display = 'none';
   });
 }
 
 function stopScanner() {
   if (html5Scanner && scannerRunning) {
-    html5Scanner.stop().then(() => { html5Scanner.clear(); scannerRunning = false; }).catch(()=>{});
+    html5Scanner.stop().then(() => { html5Scanner.clear(); scannerRunning = false; }).catch(() => {});
   }
   document.getElementById('startScanBtn').style.display = 'inline-flex';
   document.getElementById('stopScanBtn').style.display  = 'none';
-  document.getElementById('reader').style.display = 'none';
+  document.getElementById('reader').style.display       = 'none';
 }
 
 function useScanResult(val) {
-  input.value = val;
-  showTab('generate');
-  document.querySelectorAll('.nav-tab')[0].classList.add('active');
-  document.querySelectorAll('.nav-tab').forEach((t,i) => { if(i>0) t.classList.remove('active'); });
+  document.getElementById('barcodeInput').value = val;
+  showTab('generate', document.querySelector('.bnav-btn[data-tab="generate"]'));
   generateBarcode();
 }
 
@@ -425,19 +470,10 @@ document.getElementById('pdfBtn').addEventListener('click', downloadPDF);
 document.getElementById('printBtn').addEventListener('click', printBarcode);
 document.getElementById('clearBtn').addEventListener('click', clearAll);
 document.getElementById('copyBtn').addEventListener('click', copyNumber);
-input.addEventListener('keydown', e => { if (e.key === 'Enter') generateBarcode(); });
-
-// Rate limiting — prevent spam clicking
-let lastClick = 0;
-generateBtn.addEventListener('click', () => {
-  const now = Date.now();
-  if (now - lastClick < 800) { showMessage('⚠ Please wait a moment!', 'error'); return; }
-  lastClick = now;
-});
+document.getElementById('barcodeInput').addEventListener('keydown', e => { if (e.key === 'Enter') generateBarcode(); });
 
 /* ── INIT ── */
 window.addEventListener('load', () => {
-  input.focus();
   renderHistory();
   setTimeout(() => generateBarcode(), 500);
 });
