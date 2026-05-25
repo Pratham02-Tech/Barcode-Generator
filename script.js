@@ -112,31 +112,25 @@ function generateBarcode() {
         margin: 16
       });
 
-      // ── QR Code — dedicated canvas for reliable download ──
+      // ── QR Code — draw directly on canvas ──
       const qrDiv = document.getElementById('qrcode');
       qrDiv.innerHTML = '';
       const qrCanvas = document.createElement('canvas');
       qrCanvas.id = 'qrCanvas';
-      qrCanvas.width = 200; qrCanvas.height = 200;
+      qrCanvas.style.maxWidth = '100%';
       qrDiv.appendChild(qrCanvas);
-      const qrTemp = document.createElement('div');
-      qrTemp.style.display = 'none';
-      document.body.appendChild(qrTemp);
-      new QRCode(qrTemp, {
-        text: v.val, width: 200, height: 200,
-        colorDark: '#000000', colorLight: '#ffffff',
-        correctLevel: QRCode.CorrectLevel.H
+
+      // Use QRCode library which supports canvas directly
+      new QRCode(qrCanvas, {
+        text: v.val,
+        width: 200,
+        height: 200,
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.H,
+        useSVG: false
       });
-      setTimeout(() => {
-        const qrSrc = qrTemp.querySelector('img') || qrTemp.querySelector('canvas');
-        const ctx = qrCanvas.getContext('2d');
-        ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 200, 200);
-        if (qrSrc) {
-          if (qrSrc.tagName === 'CANVAS') { ctx.drawImage(qrSrc, 0, 0, 200, 200); }
-          else { const i = new Image(); i.onload = () => ctx.drawImage(i, 0, 0, 200, 200); i.src = qrSrc.src; }
-        }
-        document.body.removeChild(qrTemp);
-      }, 400);
+
       qrDiv.style.display = 'flex';
       qrDiv.style.justifyContent = 'center';
       document.getElementById('qrPlaceholder').style.display = 'none';
@@ -173,18 +167,51 @@ function downloadBarcode() {
 }
 
 function downloadQR() {
-  if (!lastGenerated) return;
-  // Always use our dedicated qrCanvas
-  const qrCanvas = document.getElementById('qrCanvas');
+  if (!lastGenerated) { showMessage('⚠ Generate barcode first!', 'error'); return; }
+
+  const qrDiv = document.getElementById('qrcode');
+
+  // QRCode lib renders as canvas on most browsers
+  const qrCanvas = qrDiv.querySelector('canvas');
   if (qrCanvas) {
-    const a = document.createElement('a');
-    a.download = `qr_${lastGenerated.value}.png`;
-    a.href = qrCanvas.toDataURL('image/png');
-    a.click();
-    showMessage('✓ QR Code downloaded!', 'success');
+    try {
+      const dataURL = qrCanvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.download = `QR_${lastGenerated.value}.png`;
+      a.href = dataURL;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showMessage('✓ QR Code downloaded!', 'success');
+      return;
+    } catch(e) {}
+  }
+
+  // Fallback: QRCode lib rendered as img — convert to canvas then download
+  const qrImg = qrDiv.querySelector('img');
+  if (qrImg) {
+    const tempC = document.createElement('canvas');
+    tempC.width = 200; tempC.height = 200;
+    const ctx = tempC.getContext('2d');
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = function() {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, 200, 200);
+      ctx.drawImage(img, 0, 0, 200, 200);
+      const a = document.createElement('a');
+      a.download = `QR_${lastGenerated.value}.png`;
+      a.href = tempC.toDataURL('image/png');
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showMessage('✓ QR Code downloaded!', 'success');
+    };
+    img.src = qrImg.src;
     return;
   }
-  showMessage('⚠ Generate barcode first!', 'error');
+
+  showMessage('⚠ QR Code not found. Generate first!', 'error');
 }
 
 /* ── PDF DOWNLOAD ── */
