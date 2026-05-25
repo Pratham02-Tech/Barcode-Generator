@@ -8,40 +8,24 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="apple-mobile-web-app-title" content="BarcodeForge"/>
   <meta name="theme-color" content="#00e5ff"/>
-  <meta name="description" content="Professional ISBN Barcode & QR Generator by Prathamesh Prashant Pawar"/>
-
-  <title>BarcodeForge</title>
-
-  <!-- PWA Manifest -->
+  <title>BarcodeForge — Prathamesh Prashant Pawar</title>
   <link rel="manifest" href="manifest.json"/>
-
-  <!-- Apple Touch Icons -->
   <link rel="apple-touch-icon" href="icons/icon-192.png"/>
-  <link rel="apple-touch-icon" sizes="192x192" href="icons/icon-192.png"/>
-  <link rel="apple-touch-icon" sizes="512x512" href="icons/icon-512.png"/>
-
-  <!-- Favicon -->
   <link rel="icon" type="image/png" href="icons/icon-192.png"/>
-
-  <!-- CDNs -->
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-  <!-- Fonts -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
 
-  <!-- INSTALL BANNER -->
   <div id="installBanner" class="install-banner" style="display:none;">
     <div class="install-content">
       <div class="install-icon">▦</div>
       <div class="install-text">
         <strong>Install BarcodeForge</strong>
-        <span>Add to Home Screen for quick access</span>
+        <span>Add to Home Screen</span>
       </div>
     </div>
     <div class="install-btns">
@@ -50,7 +34,6 @@
     </div>
   </div>
 
-  <!-- HEADER -->
   <header class="header">
     <div class="header-inner">
       <div class="logo-block">
@@ -74,8 +57,7 @@
     </div>
   </header>
 
-  <!-- BOTTOM NAV (Mobile App Style) -->
-  <nav class="bottom-nav" id="bottomNav">
+  <nav class="bottom-nav">
     <button class="bnav-btn active" onclick="showTab('generate',this)" data-tab="generate">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
       <span>Generate</span>
@@ -140,7 +122,6 @@
         <div class="message" id="message"></div>
       </div>
 
-      <!-- PREVIEW TABS -->
       <div class="preview-toggle">
         <button class="ptab active" onclick="switchPreview('barcode',this)">📊 Barcode</button>
         <button class="ptab" onclick="switchPreview('qr',this)">📱 QR Code</button>
@@ -148,13 +129,15 @@
 
       <div class="card preview-card">
         <div class="preview-timestamp" id="timestamp"></div>
+
         <div class="preview-box" id="previewBarcode">
           <div class="empty-state" id="barcodePlaceholder"><div class="empty-icon">▦</div><p>Tap Generate to preview</p></div>
           <canvas id="barcodeCanvas" style="display:none;max-width:100%;"></canvas>
         </div>
+
         <div class="preview-box" id="previewQR" style="display:none;">
           <div class="empty-state" id="qrPlaceholder"><div class="empty-icon">⬛</div><p>Tap Generate to preview</p></div>
-          <div id="qrcode" style="display:none;justify-content:center;align-items:center;"></div>
+          <canvas id="qrCanvas" style="display:none;max-width:100%;"></canvas>
         </div>
 
         <div class="action-grid" id="actionRow" style="display:none;">
@@ -184,10 +167,7 @@
 
     <!-- BULK TAB -->
     <div id="tab-bulk" class="tab-content">
-      <div class="page-title">
-        <h2>📦 Bulk Generator</h2>
-        <p>Generate multiple barcodes at once</p>
-      </div>
+      <div class="page-title"><h2>📦 Bulk Generator</h2><p>Generate multiple barcodes at once</p></div>
       <div class="card">
         <div class="field-group">
           <label class="field-label">Barcode Type</label>
@@ -198,8 +178,7 @@
         </div>
         <div class="field-group" style="margin-top:14px;">
           <label class="field-label">Numbers (one per line)</label>
-          <textarea id="bulkInput" class="bulk-textarea"
-            placeholder="9788199097148&#10;9788199097117&#10;9788199097124&#10;9788199097162"></textarea>
+          <textarea id="bulkInput" class="bulk-textarea" placeholder="9788199097148&#10;9788199097117&#10;9788199097124"></textarea>
         </div>
         <button class="btn btn-generate" onclick="generateBulk()">Generate All Barcodes</button>
         <div class="bulk-results" id="bulkResults"></div>
@@ -211,10 +190,7 @@
 
     <!-- SCANNER TAB -->
     <div id="tab-scanner" class="tab-content">
-      <div class="page-title">
-        <h2>📷 Camera Scanner</h2>
-        <p>Scan any Barcode or QR Code</p>
-      </div>
+      <div class="page-title"><h2>📷 Camera Scanner</h2><p>Scan any Barcode or QR Code</p></div>
       <div class="card">
         <div id="reader" style="display:none;border-radius:14px;overflow:hidden;margin-bottom:14px;"></div>
         <div id="scanResult" class="scan-result-box" style="display:none;"></div>
@@ -227,10 +203,7 @@
 
     <!-- HISTORY TAB -->
     <div id="tab-history" class="tab-content">
-      <div class="page-title">
-        <h2>📜 History</h2>
-        <p>Your generated barcodes</p>
-      </div>
+      <div class="page-title"><h2>📜 History</h2><p>Your generated barcodes</p></div>
       <div class="card">
         <div class="history-header">
           <span class="card-label" style="margin:0;">Recent</span>
