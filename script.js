@@ -112,24 +112,33 @@ function generateBarcode() {
         margin: 16
       });
 
-      // ── QR Code — draw directly on canvas ──
+      // ── QR Code — draw on canvas using qrcode-generator ──
       const qrDiv = document.getElementById('qrcode');
       qrDiv.innerHTML = '';
       const qrCanvas = document.createElement('canvas');
       qrCanvas.id = 'qrCanvas';
+      qrCanvas.width = 200;
+      qrCanvas.height = 200;
       qrCanvas.style.maxWidth = '100%';
       qrDiv.appendChild(qrCanvas);
 
-      // Use QRCode library which supports canvas directly
-      new QRCode(qrCanvas, {
-        text: v.val,
-        width: 200,
-        height: 200,
-        colorDark: '#000000',
-        colorLight: '#ffffff',
-        correctLevel: QRCode.CorrectLevel.H,
-        useSVG: false
-      });
+      // qrcode-generator library
+      const qr = qrcode(0, 'H');
+      qr.addData(v.val);
+      qr.make();
+      const moduleCount = qr.getModuleCount();
+      const cellSize = Math.floor(200 / moduleCount);
+      const ctx2 = qrCanvas.getContext('2d');
+      ctx2.fillStyle = '#ffffff';
+      ctx2.fillRect(0, 0, 200, 200);
+      ctx2.fillStyle = '#000000';
+      for (let row = 0; row < moduleCount; row++) {
+        for (let col = 0; col < moduleCount; col++) {
+          if (qr.isDark(row, col)) {
+            ctx2.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+          }
+        }
+      }
 
       qrDiv.style.display = 'flex';
       qrDiv.style.justifyContent = 'center';
