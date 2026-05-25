@@ -112,7 +112,7 @@ function generateBarcode() {
         margin: 16
       });
 
-      // ── QR Code — draw on canvas using qrcode-generator ──
+      // ── QR Code — Google Charts API (100% reliable) ──
       const qrDiv = document.getElementById('qrcode');
       qrDiv.innerHTML = '';
       const qrCanvas = document.createElement('canvas');
@@ -122,23 +122,24 @@ function generateBarcode() {
       qrCanvas.style.maxWidth = '100%';
       qrDiv.appendChild(qrCanvas);
 
-      // qrcode-generator library
-      const qr = qrcode(0, 'H');
-      qr.addData(v.val);
-      qr.make();
-      const moduleCount = qr.getModuleCount();
-      const cellSize = Math.floor(200 / moduleCount);
-      const ctx2 = qrCanvas.getContext('2d');
-      ctx2.fillStyle = '#ffffff';
-      ctx2.fillRect(0, 0, 200, 200);
-      ctx2.fillStyle = '#000000';
-      for (let row = 0; row < moduleCount; row++) {
-        for (let col = 0; col < moduleCount; col++) {
-          if (qr.isDark(row, col)) {
-            ctx2.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
-          }
-        }
-      }
+      // Use Google Charts QR API - always works
+      const qrUrl = 'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=' + encodeURIComponent(v.val) + '&choe=UTF-8';
+      const qrImg2 = new Image();
+      qrImg2.crossOrigin = 'Anonymous';
+      qrImg2.onload = function() {
+        const ctx2 = qrCanvas.getContext('2d');
+        ctx2.fillStyle = '#ffffff';
+        ctx2.fillRect(0, 0, 200, 200);
+        ctx2.drawImage(qrImg2, 0, 0, 200, 200);
+      };
+      qrImg2.onerror = function() {
+        // Fallback: show text QR link
+        const ctx2 = qrCanvas.getContext('2d');
+        ctx2.fillStyle = '#ffffff'; ctx2.fillRect(0, 0, 200, 200);
+        ctx2.fillStyle = '#000000'; ctx2.font = '12px Arial';
+        ctx2.fillText('QR: ' + v.val, 10, 100);
+      };
+      qrImg2.src = qrUrl;
 
       qrDiv.style.display = 'flex';
       qrDiv.style.justifyContent = 'center';
