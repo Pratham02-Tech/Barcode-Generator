@@ -2,20 +2,32 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ISBN Barcode Generator — Prathamesh Prashant Pawar</title>
-  <meta name="description" content="Professional ISBN Barcode & QR Generator by Prathamesh Prashant Pawar. Free, fast, offline-ready."/>
-  <meta name="robots" content="index, follow"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="BarcodeForge"/>
+  <meta name="theme-color" content="#00e5ff"/>
+  <meta name="description" content="Professional ISBN Barcode & QR Generator by Prathamesh Prashant Pawar"/>
 
-  <!-- Security Headers via Meta -->
-  <meta http-equiv="X-Content-Type-Options" content="nosniff"/>
-  <meta http-equiv="X-Frame-Options" content="SAMEORIGIN"/>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://fonts.googleapis.com https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;"/>
+  <title>BarcodeForge</title>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json"/>
+
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" href="icons/icon-192.png"/>
+  <link rel="apple-touch-icon" sizes="192x192" href="icons/icon-192.png"/>
+  <link rel="apple-touch-icon" sizes="512x512" href="icons/icon-512.png"/>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="icons/icon-192.png"/>
 
   <!-- CDNs -->
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <!-- Fonts -->
@@ -24,12 +36,27 @@
 </head>
 <body>
 
+  <!-- INSTALL BANNER -->
+  <div id="installBanner" class="install-banner" style="display:none;">
+    <div class="install-content">
+      <div class="install-icon">▦</div>
+      <div class="install-text">
+        <strong>Install BarcodeForge</strong>
+        <span>Add to Home Screen for quick access</span>
+      </div>
+    </div>
+    <div class="install-btns">
+      <button class="btn-install" id="installBtn">Install</button>
+      <button class="btn-dismiss" id="dismissBtn">✕</button>
+    </div>
+  </div>
+
   <!-- HEADER -->
   <header class="header">
     <div class="header-inner">
       <div class="logo-block">
         <div class="logo-icon">
-          <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg viewBox="0 0 36 36" fill="none">
             <rect x="2"  y="5" width="4" height="26" rx="1.5" fill="currentColor"/>
             <rect x="8"  y="5" width="2" height="26" rx="1" fill="currentColor" opacity=".7"/>
             <rect x="12" y="5" width="5" height="26" rx="1.5" fill="currentColor"/>
@@ -44,166 +71,170 @@
           <div class="logo-sub">by Prathamesh Prashant Pawar</div>
         </div>
       </div>
-      <nav class="nav-tabs">
-        <button class="nav-tab active" onclick="showTab('generate')">Generate</button>
-        <button class="nav-tab" onclick="showTab('bulk')">Bulk</button>
-        <button class="nav-tab" onclick="showTab('scanner')">Scanner</button>
-        <button class="nav-tab" onclick="showTab('history')">History</button>
-      </nav>
+      <div class="header-badge">Professional Tool</div>
     </div>
   </header>
 
+  <!-- BOTTOM NAV (Mobile App Style) -->
+  <nav class="bottom-nav" id="bottomNav">
+    <button class="bnav-btn active" onclick="showTab('generate',this)" data-tab="generate">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      <span>Generate</span>
+    </button>
+    <button class="bnav-btn" onclick="showTab('bulk',this)" data-tab="bulk">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      <span>Bulk</span>
+    </button>
+    <button class="bnav-btn" onclick="showTab('scanner',this)" data-tab="scanner">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      <span>Scan</span>
+    </button>
+    <button class="bnav-btn" onclick="showTab('history',this)" data-tab="history">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span>History</span>
+    </button>
+  </nav>
+
   <main class="main">
 
-    <!-- ===== TAB: GENERATE ===== -->
+    <!-- GENERATE TAB -->
     <div id="tab-generate" class="tab-content active">
-
       <div class="hero-section">
-        <div class="hero-text">
-          <h1 class="hero-title">Create Professional<br/><span class="gradient-text">Barcodes & QR Codes</span></h1>
-          <p class="hero-desc">ISBN • EAN-13 • CODE128 — Instant, scannable, downloadable</p>
-        </div>
+        <h1 class="hero-title">Create <span class="gradient-text">Barcodes</span><br/>& QR Codes</h1>
+        <p class="hero-desc">ISBN · EAN-13 · CODE128 — Instant & Offline</p>
       </div>
 
-      <div class="two-col">
-
-        <!-- Input Card -->
-        <div class="card input-card">
-          <div class="card-label">⚙ Configuration</div>
-
+      <div class="card input-card">
+        <div class="card-label">⚙ Configuration</div>
+        <div class="field-group">
+          <label class="field-label">Number / ISBN</label>
+          <div class="input-row">
+            <input type="text" id="barcodeInput" class="field-input" inputmode="numeric"
+              placeholder="9788199097148" value="9788199097148" autocomplete="off"/>
+            <button class="icon-btn" id="copyBtn" title="Copy">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="field-row">
           <div class="field-group">
-            <label class="field-label">Number / ISBN</label>
-            <div class="input-row">
-              <input type="text" id="barcodeInput" class="field-input"
-                placeholder="9788199097148" value="9788199097148" autocomplete="off" autofocus/>
-              <button class="icon-btn" id="copyBtn" title="Copy">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-              </button>
-            </div>
+            <label class="field-label">Type</label>
+            <select id="barcodeType" class="field-select">
+              <option value="EAN13" selected>EAN-13 (ISBN)</option>
+              <option value="CODE128">CODE128</option>
+              <option value="ISBN">ISBN</option>
+            </select>
           </div>
-
-          <div class="field-row">
-            <div class="field-group">
-              <label class="field-label">Type</label>
-              <select id="barcodeType" class="field-select">
-                <option value="EAN13" selected>EAN-13 (ISBN)</option>
-                <option value="CODE128">CODE128</option>
-                <option value="ISBN">ISBN</option>
-              </select>
-            </div>
-            <div class="field-group">
-              <label class="field-label">Bar Width</label>
-              <select id="barcodeWidth" class="field-select">
-                <option value="1">Narrow</option>
-                <option value="2" selected>Standard</option>
-                <option value="3">Wide</option>
-              </select>
-            </div>
+          <div class="field-group">
+            <label class="field-label">Bar Width</label>
+            <select id="barcodeWidth" class="field-select">
+              <option value="1">Narrow</option>
+              <option value="2" selected>Standard</option>
+              <option value="3">Wide</option>
+            </select>
           </div>
+        </div>
+        <button class="btn btn-generate" id="generateBtn">
+          <span id="btnText">Generate Barcode & QR</span>
+          <span class="btn-loader" id="btnLoader"></span>
+        </button>
+        <div class="message" id="message"></div>
+      </div>
 
-          <button class="btn btn-generate" id="generateBtn">
-            <span id="btnText">Generate</span>
-            <span class="btn-loader" id="btnLoader"></span>
+      <!-- PREVIEW TABS -->
+      <div class="preview-toggle">
+        <button class="ptab active" onclick="switchPreview('barcode',this)">📊 Barcode</button>
+        <button class="ptab" onclick="switchPreview('qr',this)">📱 QR Code</button>
+      </div>
+
+      <div class="card preview-card">
+        <div class="preview-timestamp" id="timestamp"></div>
+        <div class="preview-box" id="previewBarcode">
+          <div class="empty-state" id="barcodePlaceholder"><div class="empty-icon">▦</div><p>Tap Generate to preview</p></div>
+          <canvas id="barcodeCanvas" style="display:none;max-width:100%;"></canvas>
+        </div>
+        <div class="preview-box" id="previewQR" style="display:none;">
+          <div class="empty-state" id="qrPlaceholder"><div class="empty-icon">⬛</div><p>Tap Generate to preview</p></div>
+          <div id="qrcode" style="display:none;justify-content:center;align-items:center;"></div>
+        </div>
+
+        <div class="action-grid" id="actionRow" style="display:none;">
+          <button class="action-btn" id="downloadBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>PNG</span>
           </button>
-
-          <div class="message" id="message"></div>
+          <button class="action-btn" id="downloadQRBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>QR PNG</span>
+          </button>
+          <button class="action-btn" id="pdfBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span>PDF</span>
+          </button>
+          <button class="action-btn" id="printBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            <span>Print</span>
+          </button>
+          <button class="action-btn action-btn-clear" id="clearBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <span>Clear</span>
+          </button>
         </div>
-
-        <!-- Preview Card -->
-        <div class="card preview-card">
-          <div class="card-label">👁 Preview</div>
-          <div class="preview-timestamp" id="timestamp"></div>
-
-          <div class="preview-tabs">
-            <button class="preview-tab active" onclick="switchPreview('barcode', this)">Barcode</button>
-            <button class="preview-tab" onclick="switchPreview('qr', this)">QR Code</button>
-          </div>
-
-          <div class="preview-box" id="previewBarcode">
-            <div class="empty-state" id="barcodePlaceholder">
-              <div class="empty-icon">▦</div>
-              <p>Generate to preview</p>
-            </div>
-            <canvas id="barcodeCanvas" style="display:none; max-width:100%;"></canvas>
-          </div>
-
-          <div class="preview-box" id="previewQR" style="display:none;">
-            <div class="empty-state" id="qrPlaceholder">
-              <div class="empty-icon">⬛</div>
-              <p>Generate to preview</p>
-            </div>
-            <div id="qrcode" style="display:none; justify-content:center; align-items:center;"></div>
-          </div>
-
-          <div class="action-row" id="actionRow" style="display:none;">
-            <button class="btn btn-sm btn-outline" id="downloadBtn">⬇ PNG</button>
-            <button class="btn btn-sm btn-outline" id="downloadQRBtn">⬇ QR PNG</button>
-            <button class="btn btn-sm btn-outline" id="pdfBtn">📄 PDF</button>
-            <button class="btn btn-sm btn-outline" id="printBtn">🖨 Print</button>
-            <button class="btn btn-sm btn-ghost" id="clearBtn">✕ Clear</button>
-          </div>
-        </div>
-
       </div>
     </div>
 
-    <!-- ===== TAB: BULK ===== -->
+    <!-- BULK TAB -->
     <div id="tab-bulk" class="tab-content">
+      <div class="page-title">
+        <h2>📦 Bulk Generator</h2>
+        <p>Generate multiple barcodes at once</p>
+      </div>
       <div class="card">
-        <div class="card-label">📦 Bulk Barcode Generator</div>
-        <p class="card-desc">Generate multiple barcodes at once — one number per line</p>
-
-        <div class="field-group" style="margin-top:16px;">
+        <div class="field-group">
           <label class="field-label">Barcode Type</label>
-          <select id="bulkType" class="field-select" style="max-width:250px;">
+          <select id="bulkType" class="field-select">
             <option value="EAN13" selected>EAN-13 (ISBN)</option>
             <option value="CODE128">CODE128</option>
           </select>
         </div>
-
         <div class="field-group" style="margin-top:14px;">
           <label class="field-label">Numbers (one per line)</label>
           <textarea id="bulkInput" class="bulk-textarea"
             placeholder="9788199097148&#10;9788199097117&#10;9788199097124&#10;9788199097162"></textarea>
         </div>
-
-        <button class="btn btn-generate" style="max-width:300px; margin-top:16px;" onclick="generateBulk()">
-          Generate All Barcodes
-        </button>
-
+        <button class="btn btn-generate" onclick="generateBulk()">Generate All Barcodes</button>
         <div class="bulk-results" id="bulkResults"></div>
-
-        <div id="bulkActions" style="display:none; margin-top:16px;">
+        <div id="bulkActions" style="display:none;margin-top:14px;">
           <button class="btn btn-outline" onclick="downloadAllPDF()">📄 Download All as PDF</button>
         </div>
       </div>
     </div>
 
-    <!-- ===== TAB: SCANNER ===== -->
+    <!-- SCANNER TAB -->
     <div id="tab-scanner" class="tab-content">
+      <div class="page-title">
+        <h2>📷 Camera Scanner</h2>
+        <p>Scan any Barcode or QR Code</p>
+      </div>
       <div class="card">
-        <div class="card-label">📷 Camera Scanner</div>
-        <p class="card-desc">Scan Barcode or QR Code using your camera</p>
-
-        <div id="reader" style="display:none; margin:16px 0; border-radius:12px; overflow:hidden;"></div>
+        <div id="reader" style="display:none;border-radius:14px;overflow:hidden;margin-bottom:14px;"></div>
         <div id="scanResult" class="scan-result-box" style="display:none;"></div>
-
-        <div class="action-row" style="margin-top:16px;">
-          <button class="btn btn-generate" id="startScanBtn" onclick="startScanner()" style="max-width:260px;">
-            📷 Start Camera Scanner
-          </button>
-          <button class="btn btn-ghost" id="stopScanBtn" onclick="stopScanner()" style="display:none;">
-            ✕ Stop
-          </button>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;">
+          <button class="btn btn-generate" id="startScanBtn" onclick="startScanner()">📷 Start Scanner</button>
+          <button class="btn btn-ghost" id="stopScanBtn" onclick="stopScanner()" style="display:none;">✕ Stop</button>
         </div>
       </div>
     </div>
 
-    <!-- ===== TAB: HISTORY ===== -->
+    <!-- HISTORY TAB -->
     <div id="tab-history" class="tab-content">
+      <div class="page-title">
+        <h2>📜 History</h2>
+        <p>Your generated barcodes</p>
+      </div>
       <div class="card">
         <div class="history-header">
-          <div class="card-label">📜 Generation History</div>
+          <span class="card-label" style="margin:0;">Recent</span>
           <button class="btn btn-ghost btn-sm" onclick="clearHistory()">Clear All</button>
         </div>
         <div class="history-list" id="historyList">
@@ -213,10 +244,6 @@
     </div>
 
   </main>
-
-  <footer class="footer">
-    <p>BarcodeForge &nbsp;·&nbsp; Created by <strong>Prathamesh Prashant Pawar</strong> &nbsp;·&nbsp; Free Forever</p>
-  </footer>
 
   <script src="script.js"></script>
 </body>
