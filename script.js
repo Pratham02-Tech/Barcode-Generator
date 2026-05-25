@@ -17,15 +17,7 @@ document.addEventListener('keydown', e => {
   }
 });
 // Detect devtools open (basic)
-(function devtoolsDetect() {
-  const threshold = 160;
-  setInterval(() => {
-    if (window.outerWidth - window.innerWidth > threshold ||
-        window.outerHeight - window.innerHeight > threshold) {
-      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#06080f;color:#ff5252;font-size:1.2rem;">🔒 Access Restricted</div>';
-    }
-  }, 1000);
-})();
+
 // Disable text selection on sensitive areas
 document.addEventListener('selectstart', e => {
   if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') e.preventDefault();
